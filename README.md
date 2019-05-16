@@ -168,7 +168,7 @@ Pack ASCII-8BIT encoded string:
     Bytepack::Varbinary.unpack("\x03\b\x04v\x1A\xE8wev\xD6".b)
     => ["\x04v\x1A\xE8wev\xD6", 10]
 
-By default, value's length serialized by *Byteset::AnyType* as a shortest integer possible (Byte, Short, Int or Long) and allways 2 bytes or more. You can override length datatype globally and make it static:
+By default, value's length serialized by *Bytepack::AnyType* as a shortest integer possible (Byte, Short, Int or Long) and allways 2 bytes or more. You can override length datatype globally and make it static:
 
     Bytepack::Varbinary.config(:LENGTH_TYPE, Bytepack::Integer)
     value = "\x04v\x1A\xE8wev\xD6".b
