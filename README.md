@@ -168,14 +168,14 @@ Pack ASCII-8BIT encoded string:
     Bytepack::Varbinary.unpack("\x03\b\x04v\x1A\xE8wev\xD6".b)
     => ["\x04v\x1A\xE8wev\xD6", 10]
 
-By default, value's length serialized by *Bytepack::AnyType* as a shortest integer possible (Byte, Short, Int or Long) and allways 2 bytes or more. You can override length datatype globally and make it static:
+By default, value's length is serialized by *Bytepack::AnyType* as a shortest integer possible (Byte, Short, Int or Long) and allways 2 bytes or more. You can override length datatype globally and make it static:
 
     Bytepack::Varbinary.config(:LENGTH_TYPE, Bytepack::Integer)
     value = "\x04v\x1A\xE8wev\xD6".b
     Bytepack::Varbinary.pack(value)
     => "\x00\x00\x00\b\x04v\x1A\xE8wev\xD6" # includes 1 meta-byte, 4 bytes of value's length and a byteset of value
     
-Byteset size now is *2 bytes more*, but allways **4 bytes (32-bit)**. That's useful in cases where byteset length make sense in the current project.
+Byteset size now is *2 bytes more*, but *allways* **4 bytes (32-bit)**. That's useful in cases when you know that your strings never be longer than maximum *32-bit Integer (2147483647)* and the byteset length make sense in the current project.
 
 ### String UTF-8 encoded (Regular string)
 
@@ -187,7 +187,7 @@ Pack UTF-8 encoded string:
     Bytepack::String.unpack("\x03\x13Words like violence".b)
     => ["Words like violence", 21]
 
-By default, value's length serialized the same way as *Bytepack::Varbinary*, but you can specify length datatype and make it static:
+By default, value's length is serialized the same way as *Bytepack::Varbinary*, but you can specify length datatype and make it static:
 
     Bytepack::String.config(:LENGTH_TYPE, Bytepack::Integer)
     Bytepack::String.pack("Words like violence")
@@ -203,7 +203,7 @@ Works almost the same way as String serialization do:
     Bytepack::Symbol.unpack("\x03\x0Ekey_this_value".b)
     => [:key_this_value, 18]
 
-By default, value's length serialized the same way as *Bytepack::Varbinary*, but you can specify length datatype and make it static:
+By default, value's length is serialized the same way as *Bytepack::Varbinary*, but you can specify length datatype and make it static:
 
     Bytepack::Symbol.config(:LENGTH_TYPE, Bytepack::Integer)
     Bytepack::Symbol.pack(:key_this_value)
@@ -252,7 +252,7 @@ By default, array's size serialized by *Byteset::AnyType* as a shortest integer 
     Bytepack::SingleTypeArray.unpack(byteset)
     => [[1, 2, 3, 4, 5, 6, 4, 3, 2, 123, 3223, -23, 0, 12, 89, 100], 34]
 
-Byteset size now is **34** instead of **35**. Why, because in previous example length packed as *2-bytes Byteset::AnyType, including 1 meta-byte and 1 byte integer itself*. Setting explicitly the length type as *Byteset::Byte*, it just 1 byte. That's useful in cases where byteset length make sense in the current project.
+Byteset size now is **34** instead of **35**. Why, because in previous example length packed as *2-bytes Byteset::AnyType, including 1 meta-byte and 1 byte integer itself*. Setting the length type as *Byteset::Byte* explicitly, it just 1 byte ever. That's useful in cases That's useful in cases when you know that your arrays never be longer than maximum *8-bit Integer (127)* and the byteset length make sense in the current project.
 
 ### Various Type Array (Regular array)
 
@@ -277,7 +277,7 @@ Byteset size now is **43** instead of **44**.
 
 ### Hash
 
-Technically Hash serialized as two arrays: keys and values. Serialization uses length types of current *Array and SingleTypeArray* settings. Let's say we have mashed hash.
+Technically, Hash is serialized as two arrays: keys and values. Serialization uses length types of the current *Array and SingleTypeArray* settings, picking up the specific type automatically. Let's say we have mashed hash.
 
     hash = {:key1 => 1, :key2 => "2", "key3" => "key3", :key4 => 4, :key5 => :key5, :array => [1,2,3,"text",:sym, {:nil => nil, :foo => "bar"}]}
     byteset = Bytepack::Hash.pack(hash)
@@ -293,13 +293,14 @@ Hash serialized into 114 bytes. Not, recover it:
 Of course, not all available data structures are implemented out of the box. You can serialize any type of data and do it in a shorter way than *Marshal* does. For these purposes, use **Bytepack::CustomData**.
 
 1) Create class inherited from **Bytepack::CustomData** class.
-2) Class must include constant **TYPE_CODE** as a Byte integer [-127..127]. Value must be unique and not in the list of *Bytepack::TypeInfo.codes.keys* (reserved by Gem itselt)
-3) Class must include constant **RUBY_TYPE** as a class in available namespace.
+2) Class must include constant **TYPE_CODE** valued as a Byte integer [-127..127]. Value must be unique and not in the list of *Bytepack::TypeInfo.codes.keys* (reserved by Gem itself)
+3) Class must include constant **RUBY_TYPE** valued as a class in available Ruby's namespace.
 4) Like all OOB structures class must include the class method **pack()** which accepts one required argument as input value. Method returns the byteset as a result of serialization.
 5) Like all OOB structures class must include the class method **unpack()** which accepts one required and one optional arguments:
 - byteset as a *String* object;
 - offset as an *Integer* object (optional, default=0).
-The **unpack()** method returns two element array, where the first element is deserialized Ruby object and the second one is resulted offset. The return offset must be correct! For what every Gem's structures returns the same dataset when unpacking.
+
+The **unpack()** method returns two-element array, where the first element is the deserialized Ruby object and the second one is the resulted offset. The returned offset must be correct, for what every Gem's structures returns the same dataset when unpacking.
 
 Example of serialization of **ActiveSupport::Duration** objects:
 
@@ -342,3 +343,39 @@ Try it now in the Rails console:
     
     Bytepack::Array.unpack("\x00\x05\x03\x01\x03\x02\x03\x03\x03\x04\x1A\x01\x03\x00\x00\x00\x05".b)
     => [[1, 2, 3, 4, 5 days], 17]
+
+## Lazy Packing
+
+Gem recognizes data type automatically and pack it. Use universal **Bytepack::AnyType** class for packing and unpacking that kind of data:
+
+    Bytepack::AnyType.pack(120)
+    => "\x03x" # Packed to 1 meta-byte plus 1-byte Integer (8-bit)
+    
+    Bytepack::AnyType.unpack("\x03x".b)
+    => [120, 2]
+        
+    Bytepack::AnyType.pack(123412341234234)
+    => "\x06\x00\x00p>,\xC2\x9A:" # Packed to 1 meta-byte plus 8-bytes Long Integer (64-bit)
+    
+    Bytepack::AnyType.unpack("\x06\x00\x00p>,\xC2\x9A:".b)
+    => [123412341234234, 9]
+    
+And so on with other types:
+
+    Bytepack::AnyType.testpacking("String testing") # String
+    => ["String testing", 17]
+    
+    Bytepack::AnyType.testpacking("Binary String".b) # Varbinary
+    => ["Binary String", 16]
+    
+    Bytepack::AnyType.testpacking(Time.now) # Timestamp
+    => [2019-05-16 14:47:05 +0300, 9]
+    
+    Bytepack::AnyType.testpacking([1,2,3,4,5,6,7,100]) # SingleTypeArray
+    => [[1, 2, 3, 4, 5, 6, 7, 100], 12]
+    
+    Bytepack::AnyType.testpacking([1,2,"3",4,5,"six",7,:eight,{:key => 9},100]) # Array
+    => [[1, 2, "3", 4, 5, "six", 7, :eight, {:key=>9}, 100], 48]
+    
+    Bytepack::AnyType.testpacking({:sym => "Symbol", "string" => "String", 9 => 10}) # Hash
+    => [{:sym=>"Symbol", "string"=>"String", 9=>10}, 44]
