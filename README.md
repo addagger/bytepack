@@ -292,11 +292,11 @@ Hash serialized into 114 bytes. Not, recover it:
 
 Of course, not all available data structures are implemented out of the box. You can serialize any type of data and do it in a shorter way than *Marshal* does. For these purposes, use **Bytepack::CustomData**.
 
-1) Create class inherited from **Bytepack::CustomData** class.
-2) Class must include constant **TYPE_CODE** valued as a Byte integer [-127..127]. Value must be unique and not in the list of *Bytepack::TypeInfo.codes.keys* (reserved by Gem itself)
-3) Class must include constant **RUBY_TYPE** valued as a class in available Ruby's namespace.
-4) Like all OOB structures class must include the class method **pack()** which accepts one required argument as input value. Method returns the byteset as a result of serialization.
-5) Like all OOB structures class must include the class method **unpack()** which accepts one required and one optional arguments:
+1) Create class inherited from the **Bytepack::CustomData** class.
+2) Class must include the constant **TYPE_CODE** valued as a Byte integer [-127..127]. Value must be unique and not in the list of *Bytepack::TypeInfo.codes.keys* (reserved by Gem itself)
+3) Class must include the constant **RUBY_TYPE** valued as a class in available Ruby's namespace.
+4) Like all OOB structures, class must include the class method **pack()** which accepts one required argument as input value. Method returns the byteset as a result of serialization.
+5) Like all OOB structures, class must include the class method **unpack()** which accepts one required and one optional arguments:
 - byteset as a *String* object;
 - offset as an *Integer* object (optional, default=0).
 
